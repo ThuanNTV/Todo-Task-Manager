@@ -35,9 +35,13 @@ todo-master/
 
 1. Clone the repository:
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/ThuanNTV/Todo-Task-Manager.git
    ```
 2. Open `index.html` in your browser to run the application.
+
+## Live Demo
+
+Check out the live version of the application here: [Todo Master - Smart Task Manager](https://thuanntv.github.io/Todo-Task-Manager/)
 
 ## How to Use
 
