@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A modern todo list application with task management features"
+    />
+    <title>Todo Master - Smart Task Manager</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <main class="app-container">
+      <!-- Input Section -->
+      <section class="todo-input" aria-labelledby="input-heading">
+        <form id="todo-form" class="todo-form">
+          <h1 id="input-heading" class="form-heading">Create New Task</h1>
+
+          <div class="form-group">
+            <label for="todo-title" class="form-label">Task Title</label>
+            <input
+              type="text"
+              id="todo-title"
+              class="form-input"
+              placeholder="Enter task title"
+              aria-required="true"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="todo-date" class="form-label">Due Date</label>
+            <input
+              type="date"
+              id="todo-date"
+              class="form-input"
+              aria-required="true"
+            />
+          </div>
+
+          <!-- Trong phần form input -->
+          <div class="form-group">
+            <label for="todo-image" class="form-label">Attach Image</label>
+            <div class="image-upload-container">
+              <div class="file-input-wrapper">
+                <input
+                  type="file"
+                  id="todo-image"
+                  class="form-input"
+                  accept="image/*"
+                  aria-describedby="image-help"
+                />
+                <label for="todo-image" class="custom-file-btn">
+                  <span class="preview-text">Choose or drag image</span>
+                </label>
+              </div>
+              <div class="image-preview" id="image-preview">
+                <div class="preview-content">
+                  <div class="preview-icon">🖼️</div>
+                  <div class="preview-text">Image Preview</div>
+                </div>
+                <img class="preview-image" alt="Image preview" />
+              </div>
+            </div>
+            <small id="image-help" class="form-help-text">
+              Supported formats: JPEG, PNG (Max size: 5MB)
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="todo-description" class="form-label"
+              >Task Description</label
+            >
+            <textarea
+              id="todo-description"
+              class="form-input form-textarea"
+              placeholder="Describe your task..."
+              rows="4"
+              aria-required="true"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="todo-priority" class="form-label">Priority Level</label>
+            <select
+              id="todo-priority"
+              class="form-input"
+              required
+              aria-required="true"
+            >
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+          </div>
+
+          <button type="submit" class="submit-btn" aria-label="Add new task">
+            <span class="btn-icon">➕</span> Create Task
+          </button>
+        </form>
+        <button
+          type="submit"
+          class="submit-btn clear-task"
+          aria-label="Clear all task"
+        >
+          <span class="btn-icon">❌</span> Clear Task
+        </button>
+      </section>
+
+      <!-- Tasks Board -->
+      <section class="tasks-board" aria-labelledby="board-heading">
+        <h2 id="board-heading" class="visually-hidden">Tasks Board</h2>
+
+        <div class="tasks-container">
+          <!-- In Progress Section -->
+          <article
+            class="task-list progress-list"
+            aria-labelledby="progress-heading"
+          >
+            <header class="list-header">
+              <h3 id="progress-heading" class="list-title">
+                <span class="status-indicator"></span>
+                In Progress
+              </h3>
+              <span class="task-count" aria-live="polite">3 tasks</span>
+            </header>
+
+            <div class="tasks-wrapper">
+              <!-- Task Card - Sample 1 -->
+              <article
+                class="task-card"
+                data-priority="high"
+                data-due="2025-05-10"
+              >
+                <header class="task-header">
+                  <h4 class="task-title">Project Documentation Review</h4>
+                  <time class="task-date" datetime="2025-05-10"
+                    >Due: May 10, 2025</time
+                  >
+                </header>
+
+                <div class="task-body">
+                  <figure class="task-image">
+                    <img
+                      src="./img/image.jpg"
+                      alt="Project documentation cover"
+                      loading="lazy"
+                    />
+                    <figcaption class="image-caption">
+                      Document preview
+                    </figcaption>
+                  </figure>
+
+                  <div class="task-content">
+                    <p class="task-description">
+                      Final review of technical documentation before release.
+                      Ensure all API references are up-to-date and code samples
+                      work properly.
+                    </p>
+                    <ul class="task-meta">
+                      <li class="priority-tag high-priority">High Priority</li>
+                      <li class="task-status">In Progress</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <footer class="task-actions">
+                  <button
+                    type="button"
+                    class="action-btn delete-btn"
+                    aria-label="Delete task"
+                  >
+                    🗑️ Delete
+                  </button>
+                  <button
+                    type="button"
+                    class="action-btn edit-btn"
+                    aria-label="Edit task"
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="action-btn complete-btn"
+                    aria-label="Mark task as complete"
+                  >
+                    ✅ Complete
+                  </button>
+                </footer>
+              </article>
+
+              <!-- Add more task cards here -->
+            </div>
+          </article>
+
+          <!-- Completed Tasks Section -->
+          <article
+            class="task-list completed-list"
+            aria-labelledby="completed-heading"
+          >
+            <header class="list-header">
+              <h3 id="completed-heading" class="list-title">
+                <span class="status-indicator"></span>
+                Completed
+              </h3>
+              <span class="task-count" aria-live="polite">2 tasks</span>
+            </header>
+
+            <div class="tasks-wrapper">
+              <!-- Completed Task Card -->
+              <article
+                class="task-card completed"
+                data-priority="medium"
+                data-completed="2025-05-09"
+              >
+                <header class="task-header">
+                  <h4 class="task-title">Team Meeting Preparation</h4>
+                  <time class="task-date" datetime="2025-05-08"
+                    >Completed: May 9, 2025</time
+                  >
+                </header>
+
+                <div class="task-body">
+                  <div class="task-content">
+                    <p class="task-description">
+                      Prepared agenda and materials for quarterly team meeting.
+                      Included budget reports and project timelines.
+                    </p>
+                    <ul class="task-meta">
+                      <li class="priority-tag medium-priority">
+                        Medium Priority
+                      </li>
+                      <li class="task-status">Completed</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <footer class="task-actions">
+                  <button
+                    type="button"
+                    class="action-btn delete-btn"
+                    aria-label="Delete task"
+                  >
+                    🗑️ Delete
+                  </button>
+                  <button
+                    type="button"
+                    class="action-btn archive-btn"
+                    aria-label="Archive task"
+                  >
+                    📦 Archive
+                  </button>
+                </footer>
+              </article>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
