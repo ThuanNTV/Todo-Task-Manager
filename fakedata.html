@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Generate Tasks JSON</title>
+  </head>
+  <body>
+    <h1>Generate Task Data (100 JSON)</h1>
+    <button onclick="generateTasks()">Generate</button>
+    <pre id="output" style="white-space: pre-wrap"></pre>
+
+    <script type="module">
+      import { faker } from "https://cdn.skypack.dev/@faker-js/faker";
+
+      const priorities = ["low", "medium", "high"];
+      const statuses = ["completed", "progress", "archived"];
+
+      function generateTask() {
+        const status = faker.helpers.arrayElement(statuses);
+        const createdAt = faker.date.recent(5);
+        const completedAt =
+          status === "completed"
+            ? faker.date.between({ from: createdAt, to: new Date() })
+            : null;
+
+        return {
+          id: faker.string.uuid(), // Updated to use faker.string.uuid()
+          title: faker.hacker.phrase(),
+          date: faker.date.soon(10).toISOString().split("T")[0],
+          description: faker.lorem.sentences(2),
+          priority: faker.helpers.arrayElement(priorities),
+          image: null,
+          status,
+          createdAt: createdAt.toISOString(),
+          completedAt: completedAt ? completedAt.toISOString() : null,
+        };
+      }
+
+      window.generateTasks = function () {
+        const tasks = Array.from({ length: 100 }, generateTask);
+        document.getElementById("output").textContent = JSON.stringify(
+          tasks,
+          null,
+          2
+        );
+        const json = JSON.stringify(tasks, null, 2);
+        navigator.clipboard
+          .writeText(json)
+          .then(() => alert("✅ Copied to clipboard!"))
+          .catch((err) => alert("❌ Copy failed: " + err));
+      };
+    </script>
+  </body>
+</html>
