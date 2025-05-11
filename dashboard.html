@@ -17,6 +17,9 @@
   <body>
     <div id="notification-container"></div>
     <div class="dashboard">
+      <button id="menu-toggle" class="menu-toggle" aria-label="Toggle menu">
+        <i class="fas fa-bars"></i>
+      </button>
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="logo"><i class="fas fa-check-circle"></i> TodoMaster</div>
@@ -108,72 +111,211 @@
 
         <!-- Tasks List View -->
         <div id="tasks-view" class="view-container hidden">
-          <div class="tasks-list-section">
-            <div class="header">
-              <h1>All Tasks</h1>
-              <button class="btn btn-primary" id="tasks-add-btn">
-                <i class="fas fa-plus"></i>
-                <span>New Task</span>
-              </button>
-            </div>
+          <div class="view-header">
+            <h1>Tasks</h1>
+            <button id="tasks-add-btn" class="btn primary">
+              <i class="fas fa-plus"></i> Add Task
+            </button>
+          </div>
 
-            <div class="task-list-filters">
-              <div class="filter-group">
-                <label for="status-filter">Status:</label>
-                <select id="status-filter">
-                  <option value="all">All</option>
-                  <option value="progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
-
-              <div class="filter-group">
-                <label for="priority-filter">Priority:</label>
-                <select id="priority-filter">
-                  <option value="all">All</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-
-              <div class="filter-group">
-                <label for="task-date-from">From:</label>
-                <input type="date" id="task-date-from" />
-              </div>
-
-              <div class="filter-group">
-                <label for="task-date-to">To:</label>
-                <input type="date" id="task-date-to" />
+          <div class="filters-section">
+            <div class="filter-group">
+              <label>Date Range</label>
+              <div class="date-inputs">
+                <input
+                  type="date"
+                  id="task-date-from"
+                  aria-label="Filter from date"
+                />
+                <input
+                  type="date"
+                  id="task-date-to"
+                  aria-label="Filter to date"
+                />
               </div>
             </div>
 
-            <div id="tasks-list" role="list"></div>
+            <div class="filter-group">
+              <label>Priority</label>
+              <select
+                id="priority-filter"
+                aria-label="Filter tasks by priority"
+              >
+                <option value="all">All</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label>Sort By</label>
+              <select id="sort-by" aria-label="Sort tasks">
+                <option value="createdAt-desc">Created (Newest)</option>
+                <option value="createdAt-asc">Created (Oldest)</option>
+                <option value="date-asc">Due Date (Earliest)</option>
+                <option value="date-desc">Due Date (Latest)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="tasks-board">
+            <div class="task-column">
+              <div class="column-header">
+                <h2>In Progress</h2>
+                <span class="task-count" id="progress-count">0</span>
+              </div>
+              <div class="task-list" id="progress-tasks-list">
+                <!-- Tasks will be rendered here -->
+              </div>
+            </div>
+
+            <div class="task-column">
+              <div class="column-header">
+                <h2>Completed</h2>
+                <span class="task-count" id="completed-count">0</span>
+              </div>
+              <div class="task-list" id="completed-tasks-list">
+                <!-- Tasks will be rendered here -->
+              </div>
+            </div>
+
+            <div class="task-column">
+              <div class="column-header">
+                <h2>Archived</h2>
+                <span class="task-count" id="archived-count">0</span>
+              </div>
+              <div class="task-list" id="archived-tasks-list">
+                <!-- Tasks will be rendered here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Pagination Controls -->
+          <div class="pagination-controls">
+            <button id="prev-page" class="btn btn-secondary">
+              <i class="fas fa-chevron-left"></i> Previous
+            </button>
+            <div class="page-info">
+              Page
+              <input type="number" id="current-page" min="1" value="1" /> of
+              <span id="total-pages">1</span>
+            </div>
+            <button id="next-page" class="btn btn-secondary">
+              Next <i class="fas fa-chevron-right"></i>
+            </button>
           </div>
         </div>
 
-        <!-- Analytics View (Placeholder) -->
+        <!-- Analytics View -->
         <div id="analytics-view" class="view-container hidden">
-          <div class="header">
-            <h1>Analytics</h1>
+          <div class="view-header">
+            <h1>Analytics Dashboard</h1>
           </div>
-          <p class="placeholder-message">Analytics view coming soon</p>
+          <div id="analytics-container" class="analytics-grid">
+            <!-- Analytics cards will be rendered here by JavaScript -->
+          </div>
         </div>
 
-        <!-- Calendar View (Placeholder) -->
+        <!-- Calendar View -->
         <div id="calendar-view" class="view-container hidden">
-          <div class="header">
+          <div class="view-header">
             <h1>Calendar</h1>
           </div>
-          <p class="placeholder-message">Calendar view coming soon</p>
+          <div id="calendar-container">
+            <!-- Calendar will be rendered here by JavaScript -->
+          </div>
         </div>
-
-        <!-- Settings View (Placeholder) -->
+        <!-- Settings View -->
         <div id="settings-view" class="view-container hidden">
           <div class="header">
             <h1>Settings</h1>
           </div>
-          <p class="placeholder-message">Settings view coming soon</p>
+          <div class="settings-container">
+            <!-- Theme Settings -->
+            <section class="settings-section">
+              <h2>Theme Settings</h2>
+              <div class="settings-option">
+                <label for="theme-selector">Theme Mode</label>
+                <select id="theme-selector" class="settings-input">
+                  <option value="light">Light</option>
+                  <option value="dark">Dark</option>
+                  <option value="system">System Default</option>
+                </select>
+              </div>
+            </section>
+
+            <!-- View Settings -->
+            <section class="settings-section">
+              <h2>View Preferences</h2>
+              <div class="settings-option">
+                <label for="default-view">Default View</label>
+                <select id="default-view" class="settings-input">
+                  <option value="dashboard">Dashboard</option>
+                  <option value="tasks">Tasks</option>
+                  <option value="calendar">Calendar</option>
+                  <option value="analytics">Analytics</option>
+                </select>
+              </div>
+            </section>
+
+            <!-- Task Display Settings -->
+            <section class="settings-section">
+              <h2>Task Display</h2>
+              <div class="settings-option">
+                <label for="tasks-per-page">Tasks per Page</label>
+                <select id="tasks-per-page" class="settings-input">
+                  <option value="5">5 Tasks</option>
+                  <option value="10">10 Tasks</option>
+                  <option value="15">15 Tasks</option>
+                  <option value="20">20 Tasks</option>
+                </select>
+              </div>
+              <div class="settings-option checkbox-option">
+                <input
+                  type="checkbox"
+                  id="show-completed"
+                  class="settings-checkbox"
+                />
+                <label for="show-completed"
+                  >Show completed tasks in lists</label
+                >
+              </div>
+              <div class="settings-option checkbox-option">
+                <input
+                  type="checkbox"
+                  id="compact-view"
+                  class="settings-checkbox"
+                />
+                <label for="compact-view">Use compact view</label>
+              </div>
+            </section>
+
+            <!-- Notification Settings -->
+            <section class="settings-section">
+              <h2>Notifications</h2>
+              <div class="settings-option checkbox-option">
+                <input
+                  type="checkbox"
+                  id="enable-notifications"
+                  class="settings-checkbox"
+                />
+                <label for="enable-notifications">Enable notifications</label>
+              </div>
+              <div class="settings-option">
+                <label for="notification-time"
+                  >Notification Reminder Time</label
+                >
+                <select id="notification-time" class="settings-input">
+                  <option value="0">At due time</option>
+                  <option value="15">15 minutes before</option>
+                  <option value="30">30 minutes before</option>
+                  <option value="60">1 hour before</option>
+                  <option value="1440">1 day before</option>
+                </select>
+              </div>
+            </section>
+          </div>
         </div>
 
         <!-- Add/Edit Task Modal -->

@@ -15,6 +15,7 @@ const CONFIG = {
   status: {
     COMPLETED: "completed",
     PROGRESS: "progress",
+    ARCHIVED: "archived",
   },
   priority: {
     HIGH: "high",
@@ -32,6 +33,17 @@ class TaskManager {
   constructor() {
     this.tasks = [];
     this.loadTasks();
+  }
+
+  tasksPerPage = 10; // Default value
+
+  setTasksPerPage(count) {
+    this.tasksPerPage = count;
+  }
+
+  getTasksForCurrentPage(tasks, page = 1) {
+    const start = (page - 1) * this.tasksPerPage;
+    return tasks.slice(start, start + this.tasksPerPage);
   }
 
   loadTasks() {
@@ -337,6 +349,186 @@ class UIController {
 
     // Initialize UI elements
     this.initEventListeners();
+    this.initSettings();
+  }
+
+  initSettings() {
+    // Load saved settings
+    this.settings = this.loadSettings();
+
+    // Apply saved settings
+    this.applySettings();
+
+    // Initialize settings event listeners
+    this.initSettingsListeners();
+  }
+
+  loadSettings() {
+    const defaultSettings = {
+      theme: "light",
+      defaultView: "dashboard",
+      tasksPerPage: 10,
+      showCompleted: true,
+      compactView: false,
+      notifications: {
+        enabled: true,
+        reminderTime: 30, // minutes before
+      },
+    };
+
+    try {
+      const savedSettings = JSON.parse(localStorage.getItem("todoSettings"));
+      return { ...defaultSettings, ...savedSettings };
+    } catch (error) {
+      console.error("Error loading settings:", error);
+      return defaultSettings;
+    }
+  }
+
+  saveSettings() {
+    try {
+      localStorage.setItem("todoSettings", JSON.stringify(this.settings));
+      this.showNotification("Settings saved successfully", "success");
+    } catch (error) {
+      console.error("Error saving settings:", error);
+      this.showNotification("Failed to save settings", "error");
+    }
+  }
+
+  applySettings() {
+    // Apply theme
+    document.documentElement.setAttribute("data-theme", this.settings.theme);
+
+    // Apply tasks per page
+    this.taskManager.setTasksPerPage(this.settings.tasksPerPage);
+
+    // Apply view preferences
+    if (this.settings.compactView) {
+      document.body.classList.add("compact-view");
+    } else {
+      document.body.classList.remove("compact-view");
+    }
+
+    // Apply completed tasks visibility
+    if (!this.settings.showCompleted) {
+      document.querySelectorAll(".task-item.completed").forEach((task) => {
+        task.style.display = "none";
+      });
+    }
+
+    // Update settings form to reflect current settings
+    this.updateSettingsForm();
+  }
+
+  updateSettingsForm() {
+    // Update theme selector
+    const themeSelector = document.getElementById("theme-selector");
+    if (themeSelector) {
+      themeSelector.value = this.settings.theme;
+    }
+
+    // Update default view
+    const defaultView = document.getElementById("default-view");
+    if (defaultView) {
+      defaultView.value = this.settings.defaultView;
+    }
+
+    // Update tasks per page
+    const tasksPerPage = document.getElementById("tasks-per-page");
+    if (tasksPerPage) {
+      tasksPerPage.value = this.settings.tasksPerPage;
+    }
+
+    // Update checkboxes
+    const showCompleted = document.getElementById("show-completed");
+    if (showCompleted) {
+      showCompleted.checked = this.settings.showCompleted;
+    }
+
+    const compactView = document.getElementById("compact-view");
+    if (compactView) {
+      compactView.checked = this.settings.compactView;
+    }
+
+    const enableNotifications = document.getElementById("enable-notifications");
+    if (enableNotifications) {
+      enableNotifications.checked = this.settings.notifications.enabled;
+    }
+
+    const notificationTime = document.getElementById("notification-time");
+    if (notificationTime) {
+      notificationTime.value = this.settings.notifications.reminderTime;
+    }
+  }
+
+  initSettingsListeners() {
+    // Theme changes
+    const themeSelector = document.getElementById("theme-selector");
+    if (themeSelector) {
+      themeSelector.addEventListener("change", (e) => {
+        this.settings.theme = e.target.value;
+        this.applySettings();
+        this.saveSettings();
+      });
+    }
+
+    // Default view changes
+    const defaultView = document.getElementById("default-view");
+    if (defaultView) {
+      defaultView.addEventListener("change", (e) => {
+        this.settings.defaultView = e.target.value;
+        this.saveSettings();
+      });
+    }
+
+    // Tasks per page changes
+    const tasksPerPage = document.getElementById("tasks-per-page");
+    if (tasksPerPage) {
+      tasksPerPage.addEventListener("change", (e) => {
+        this.settings.tasksPerPage = parseInt(e.target.value);
+        this.applySettings();
+        this.saveSettings();
+        this.updateUI();
+      });
+    }
+
+    // Show completed tasks changes
+    const showCompleted = document.getElementById("show-completed");
+    if (showCompleted) {
+      showCompleted.addEventListener("change", (e) => {
+        this.settings.showCompleted = e.target.checked;
+        this.applySettings();
+        this.saveSettings();
+        this.updateUI();
+      });
+    }
+
+    // Compact view changes
+    const compactView = document.getElementById("compact-view");
+    if (compactView) {
+      compactView.addEventListener("change", (e) => {
+        this.settings.compactView = e.target.checked;
+        this.applySettings();
+        this.saveSettings();
+      });
+    }
+
+    // Notification settings changes
+    const enableNotifications = document.getElementById("enable-notifications");
+    if (enableNotifications) {
+      enableNotifications.addEventListener("change", (e) => {
+        this.settings.notifications.enabled = e.target.checked;
+        this.saveSettings();
+      });
+    }
+
+    const notificationTime = document.getElementById("notification-time");
+    if (notificationTime) {
+      notificationTime.addEventListener("change", (e) => {
+        this.settings.notifications.reminderTime = parseInt(e.target.value);
+        this.saveSettings();
+      });
+    }
   }
 
   initModalEvents() {
@@ -615,6 +807,185 @@ class UIController {
     `;
   }
 
+  updateAnalytics() {
+    const stats = this.taskManager.getTaskStats();
+    const tasks = this.taskManager.getAllTasks();
+
+    // Calculate completion rate over time
+    const completionData = tasks.reduce((acc, task) => {
+      if (task.status === CONFIG.status.COMPLETED && task.completedAt) {
+        const completedDate = new Date(task.completedAt).toLocaleDateString();
+        acc[completedDate] = (acc[completedDate] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    // Calculate average completion time
+    const completionTimes = tasks
+      .filter((task) => task.status === CONFIG.status.COMPLETED)
+      .map((task) => {
+        const created = new Date(task.createdAt);
+        const completed = new Date(task.completedAt);
+        return (completed - created) / (1000 * 60 * 60 * 24); // Convert to days
+      });
+
+    const avgCompletionTime = completionTimes.length
+      ? (
+          completionTimes.reduce((a, b) => a + b, 0) / completionTimes.length
+        ).toFixed(1)
+      : 0;
+
+    // Update analytics view
+    const analyticsContainer = document.getElementById("analytics-container");
+    if (!analyticsContainer) return;
+
+    analyticsContainer.innerHTML = `
+      <div class="analytics-card">
+        <h3>Task Completion Rate</h3>
+        <div class="stat-value">${
+          Math.round((stats.completed / stats.total) * 100) || 0
+        }%</div>
+        <div class="stat-label">of tasks completed</div>
+      </div>
+      <div class="analytics-card">
+        <h3>Average Completion Time</h3>
+        <div class="stat-value">${avgCompletionTime}</div>
+        <div class="stat-label">days per task</div>
+      </div>
+      <div class="analytics-card">
+        <h3>Priority Distribution</h3>
+        <div class="stat-chart">
+          <div class="stat-bar high" style="width: ${
+            (stats.priorities.high / stats.total) * 100
+          }%"></div>
+          <div class="stat-bar medium" style="width: ${
+            (stats.priorities.medium / stats.total) * 100
+          }%"></div>
+          <div class="stat-bar low" style="width: ${
+            (stats.priorities.low / stats.total) * 100
+          }%"></div>
+        </div>
+        <div class="stat-legend">
+          <span class="legend-item high">High: ${stats.priorities.high}</span>
+          <span class="legend-item medium">Medium: ${
+            stats.priorities.medium
+          }</span>
+          <span class="legend-item low">Low: ${stats.priorities.low}</span>
+        </div>
+      </div>
+      <div class="analytics-card">
+        <h3>Daily Completion Trend</h3>
+        <div class="trend-chart">
+          ${Object.entries(completionData)
+            .map(
+              ([date, count]) => `
+              <div class="trend-bar" style="height: ${
+                count * 20
+              }px" title="${date}: ${count} tasks">
+                <span class="trend-label">${count}</span>
+              </div>
+            `
+            )
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  updateCalendar() {
+    const container = document.getElementById("calendar-container");
+    if (!container) return;
+
+    const tasks = this.taskManager.getAllTasks();
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    // Get first day of month
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const lastDay = new Date(currentYear, currentMonth + 1, 0);
+
+    // Create calendar header
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    // Group tasks by date
+    const tasksByDate = tasks.reduce((acc, task) => {
+      const dateKey = new Date(task.date).toISOString().split("T")[0];
+      if (!acc[dateKey]) acc[dateKey] = [];
+      acc[dateKey].push(task);
+      return acc;
+    }, {});
+
+    // Generate calendar HTML
+    let calendarHTML = `
+      <div class="calendar-header">
+        <h2>${monthNames[currentMonth]} ${currentYear}</h2>
+      </div>
+      <div class="calendar-grid">
+        <div class="calendar-day-header">Sun</div>
+        <div class="calendar-day-header">Mon</div>
+        <div class="calendar-day-header">Tue</div>
+        <div class="calendar-day-header">Wed</div>
+        <div class="calendar-day-header">Thu</div>
+        <div class="calendar-day-header">Fri</div>
+        <div class="calendar-day-header">Sat</div>
+    `;
+
+    // Add empty cells for days before start of month
+    for (let i = 0; i < firstDay.getDay(); i++) {
+      calendarHTML += '<div class="calendar-day empty"></div>';
+    }
+
+    // Add days with tasks
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+      const date = new Date(currentYear, currentMonth, day);
+      const dateKey = date.toISOString().split("T")[0];
+      const dayTasks = tasksByDate[dateKey] || [];
+      const isToday = date.toDateString() === today.toDateString();
+
+      calendarHTML += `
+        <div class="calendar-day ${isToday ? "today" : ""}">
+          <span class="day-number">${day}</span>
+          ${dayTasks
+            .map(
+              (task) => `
+            <div class="calendar-task ${task.status}" data-task-id="${task.id}">
+              <span class="priority-dot ${task.priority}"></span>
+              <span class="task-title">${this.escapeHTML(task.title)}</span>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      `;
+    }
+
+    calendarHTML += "</div>";
+    container.innerHTML = calendarHTML;
+
+    // Add click handlers for tasks
+    container.querySelectorAll(".calendar-task").forEach((taskElement) => {
+      taskElement.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const taskId = taskElement.dataset.taskId;
+        if (taskId) this.showTaskDetail(taskId);
+      });
+    });
+  }
+
   renderActivities() {
     const recentTasks = this.taskManager.getRecentTasks(5);
     const container = document.getElementById("activities-list");
@@ -666,58 +1037,143 @@ class UIController {
     const filters = {
       dateFrom: document.getElementById("task-date-from")?.value,
       dateTo: document.getElementById("task-date-to")?.value,
-      status: document.getElementById("status-filter")?.value,
       priority: document.getElementById("priority-filter")?.value,
     };
 
     const sortByValue =
       document.getElementById("sort-by")?.value || "createdAt-desc";
+    const currentPage = parseInt(
+      document.getElementById("current-page")?.value || "1"
+    );
 
     const filteredTasks = this.taskManager.filterTasks(filters);
     const sortedTasks = this.taskManager.sortTasks(filteredTasks, sortByValue);
+    const paginatedTasks = this.taskManager.getTasksForCurrentPage(
+      sortedTasks,
+      currentPage
+    );
 
-    const container = document.getElementById("tasks-list");
-    if (!container) return;
+    // Group tasks by status
+    const groupedTasks = {
+      [CONFIG.status.PROGRESS]: [],
+      [CONFIG.status.COMPLETED]: [],
+      [CONFIG.status.ARCHIVED]: [],
+    };
 
-    if (sortedTasks.length === 0) {
-      container.innerHTML =
-        '<div class="no-tasks">No tasks found matching your filters</div>';
-      return;
-    }
+    // Only show completed tasks if enabled in settings
+    paginatedTasks.forEach((task) => {
+      if (
+        task.status === CONFIG.status.COMPLETED &&
+        !this.settings.showCompleted
+      ) {
+        return;
+      }
+      if (groupedTasks[task.status]) {
+        groupedTasks[task.status].push(task);
+      }
+    });
 
-    container.innerHTML = sortedTasks
-      .map(
-        (task) => `
-      <div class="task-item ${task.status}" data-task-id="${task.id}">
-        <div class="task-main-info">
-          <span class="priority-dot ${task.priority}"></span>
-          <span class="task-title">${this.escapeHTML(task.title)}</span>
-          ${task.image ? '<i class="fas fa-image"></i>' : ""}
+    // Update count badges
+    document.getElementById("progress-count").textContent =
+      groupedTasks[CONFIG.status.PROGRESS].length;
+    document.getElementById("completed-count").textContent =
+      groupedTasks[CONFIG.status.COMPLETED].length;
+    document.getElementById("archived-count").textContent =
+      groupedTasks[CONFIG.status.ARCHIVED].length;
+
+    // Render tasks for each column
+    Object.entries(groupedTasks).forEach(([status, tasks]) => {
+      const container = document.getElementById(`${status}-tasks-list`);
+      if (!container) return;
+
+      if (tasks.length === 0) {
+        container.innerHTML = `<div class="no-tasks">No ${status} tasks</div>`;
+        return;
+      }
+
+      container.innerHTML = tasks
+        .map(
+          (task) => `
+        <div class="task-item ${task.status} ${
+            this.settings.compactView ? "compact" : ""
+          }" data-task-id="${task.id}">
+          <div class="task-main-info">
+            <span class="priority-dot ${task.priority}"></span>
+            <span class="task-title">${this.escapeHTML(task.title)}</span>
+            ${task.image ? '<i class="fas fa-image"></i>' : ""}
+          </div>
+          <div class="task-info">
+            <span class="task-date">Due: ${new Date(
+              task.date
+            ).toLocaleDateString()}</span>
+            ${
+              task.completedAt
+                ? `<span class="completed-date">✓ ${new Date(
+                    task.completedAt
+                  ).toLocaleDateString()}</span>`
+                : ""
+            }
+          </div>
         </div>
-        <div class="task-info">
-          <span class="task-date">Due: ${new Date(
-            task.date
-          ).toLocaleDateString()}</span>
-          ${
-            task.status === CONFIG.status.COMPLETED
-              ? `<span class="completed-date">✓ ${new Date(
-                  task.completedAt
-                ).toLocaleDateString()}</span>`
-              : `<span class="task-status ${task.status}">${task.status}</span>`
-          }
-        </div>
-      </div>
-    `
-      )
-      .join("");
+      `
+        )
+        .join("");
 
-    // Add click handlers
-    container.querySelectorAll(".task-item").forEach((item) => {
-      item.addEventListener("click", () => {
-        const taskId = item.dataset.taskId;
-        if (taskId) this.showTaskDetail(taskId);
+      // Add click handlers
+      container.querySelectorAll(".task-item").forEach((item) => {
+        item.addEventListener("click", () => {
+          const taskId = item.dataset.taskId;
+          if (taskId) this.showTaskDetail(taskId);
+        });
       });
     });
+
+    // Update pagination controls
+    this.updatePaginationControls(currentPage, sortedTasks.length);
+  }
+
+  updatePaginationControls(currentPage, totalItems) {
+    const totalPages = Math.ceil(totalItems / this.taskManager.tasksPerPage);
+    const currentPageInput = document.getElementById("current-page");
+    const totalPagesSpan = document.getElementById("total-pages");
+    const prevButton = document.getElementById("prev-page");
+    const nextButton = document.getElementById("next-page");
+
+    if (currentPageInput) currentPageInput.value = currentPage;
+    if (totalPagesSpan) totalPagesSpan.textContent = totalPages;
+
+    if (prevButton) {
+      prevButton.disabled = currentPage <= 1;
+      prevButton.addEventListener("click", () => {
+        if (currentPage > 1) {
+          currentPageInput.value = currentPage - 1;
+          this.renderTasksList();
+        }
+      });
+    }
+
+    if (nextButton) {
+      nextButton.disabled = currentPage >= totalPages;
+      nextButton.addEventListener("click", () => {
+        if (currentPage < totalPages) {
+          currentPageInput.value = currentPage + 1;
+          this.renderTasksList();
+        }
+      });
+    }
+
+    if (currentPageInput) {
+      currentPageInput.addEventListener("change", (e) => {
+        let newPage = parseInt(e.target.value);
+        if (isNaN(newPage) || newPage < 1) {
+          newPage = 1;
+        } else if (newPage > totalPages) {
+          newPage = totalPages;
+        }
+        e.target.value = newPage;
+        this.renderTasksList();
+      });
+    }
   }
 
   showTaskDetail(taskId) {
